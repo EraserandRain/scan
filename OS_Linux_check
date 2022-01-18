@@ -1,0 +1,623 @@
+uid_min=`(egrep -v ^# /etc/login.defs |egrep "^UID_MIN"|awk '($1="UID_MIN"){print $2}')` 
+uid_max=`(egrep -v ^# /etc/login.defs |egrep "^UID_MAX"|awk '($1="UID_MAX"){print $2}')` 
+egrep -v "oracle|sybase|postgres|informix" /etc/passwd|awk -F: '($3>='$uid_min' && $3<='$uid_max') {print $1":"$3}' 
+echo "result="`egrep -v "oracle|sybase|postgres|informix" /etc/passwd|awk -F: '($3>='$uid_min' && $3<='$uid_max') {print $1":"$3}'|wc -l`
+
+echo '#!/bin/bash' > /tmp/unicomtest.sh
+echo '/sbin/chkconfig --list |egrep "telnet"' >> /tmp/unicomtest.sh
+echo 'Telnet_Status=`/sbin/chkconfig --list|egrep "telnet.*"|egrep "on|启用"|wc -l`' >> /tmp/unicomtest.sh
+echo 'if [ $Telnet_Status -ge 1 ]' >> /tmp/unicomtest.sh
+echo ' then ' >> /tmp/unicomtest.sh
+echo '  echo "PTS_NUM="`cat /etc/securetty|grep -v "^[[:space:]]*#"|egrep "pts/*"|wc -l` ' >> /tmp/unicomtest.sh
+echo '  else ' >> /tmp/unicomtest.sh
+echo '  echo "Telnet:OFF" ' >> /tmp/unicomtest.sh
+echo ' fi ' >> /tmp/unicomtest.sh
+/bin/bash /tmp/unicomtest.sh
+rm -rf /tmp/unicomtest.sh
+
+echo '#!/bin/bash ' > /tmp/unicomtest.sh
+echo 'if egrep -v "^[[:space:]]*#" /etc/ssh/sshd_config|egrep -i "PermitRootLogin (no)|(without-password)|(prohibit-password)|(forced-commands-only)" ' >> /tmp/unicomtest.sh
+echo '  then echo "Do not permit root login by ssh,check result:true"; ' >> /tmp/unicomtest.sh
+echo '   else ' >> /tmp/unicomtest.sh
+echo '   echo "Permits root login by ssh,check result:false"; ' >> /tmp/unicomtest.sh
+echo '  fi ' >> /tmp/unicomtest.sh
+echo 'if egrep  -v "^[[:space:]]*#" /etc/ssh/sshd_config|egrep -i "^[[:space:]]*protocol[[:space:]]*2|^[[:space:]]*Protocol[[:space:]]*2" ' >> /tmp/unicomtest.sh
+echo '  then echo "SSH2,check result:true" ' >> /tmp/unicomtest.sh
+echo '  else ' >> /tmp/unicomtest.sh
+echo '  echo "not SSH2,check result:false" ' >> /tmp/unicomtest.sh
+echo '  fi ' >> /tmp/unicomtest.sh
+/bin/bash /tmp/unicomtest.sh
+rm -rf /tmp/unicomtest.sh
+
+cat /etc/login.defs|egrep -v "^[[:space:]]*#"|egrep -i umask|tail -n1|awk '{print $1":"$2}'
+
+#!/bin/bash
+ftp_status=`ps -ef|egrep -v grep|egrep -i ftpd|wc -l` 
+check_state() 
+{ 
+  if [ -f /etc/vsftpd.conf ]; 
+   then 
+  ftp_config="/etc/vsftpd.conf"; 
+   else 
+   if [ -f /etc/vsftpd/vsftpd.conf ]; 
+   then 
+  ftp_config="/etc/vsftpd/vsftpd.conf"; 
+  fi; 
+  fi; 
+  if [ -f "$ftp_config" ]; 
+  then 
+   if ([ `egrep -v "^#" $ftp_config|egrep -i "chroot_list_enable=YES"|wc -l` -eq 1 ] && [ `egrep -v "^#" /etc/vsftpd/vsftpd.conf|grep -i "chroot_local_user=YES"|wc -l` -eq 0 ]); 
+   then 
+   if [ -s "`egrep -v "^#" $ftp_config|egrep -i "chroot_list_file"|cut -d\= -f2`" ]; 
+  then 
+  echo "FTP:ON.check result:true" 
+  else 
+  echo "FTP:ON.check result:flase" 
+  fi 
+  else 
+  echo "FTP:ON.check result:flase" 
+   fi 
+  fi 
+  unset ftp_config; 
+  } 
+if [ $ftp_status -eq 0 ]; 
+  then 
+  echo "FTP:OFF.check result:true"; 
+   else 
+   check_state; 
+  fi 
+
+last | wc -l
+
+#!/bin/bash
+if [ -f /etc/syslog.conf ]; 
+  then 
+   cat /etc/syslog.conf | egrep  -v "^[[:space:]]*#" | egrep "authpriv" | egrep "/var/log/secure"; 
+  fi; 
+if [ -f /etc/rsyslog.conf ]; 
+  then cat /etc/rsyslog.conf | egrep -v "^[[:space:]]*#" | egrep "authpriv" | egrep "/var/log/secure"; 
+  fi
+if [ -s /etc/syslog-ng/syslog-ng.conf ]; 
+  then 
+    fauthpriv=`cat /etc/syslog-ng/syslog-ng.conf | egrep -v "^[[:space:]]*#" | egrep "^[[:space:]]*filter" | egrep "facility[[:space:]]*\([[:space:]]*authpriv[[:space:]]*\)"| awk '{print $2}'`
+    if [ -n "$fauthpriv" ];
+    then 
+      log_count=`cat /etc/syslog-ng/syslog-ng.conf | egrep -v "^[[:space:]]*#" | egrep "^[[:space:]]*log" | egrep $fauthpriv | wc -l`
+      if [ $log_count -ge 1 ];
+      then echo "result:true";
+      else echo "Authpriv not config, result:false";
+      fi
+    else
+      echo "No authpriv, result:false";
+    fi
+  fi
+
+#!/bin/bash
+SYSLOGD_FLAG=`ps -ef |egrep ' syslogd '|egrep -v "grep"|wc -l`; 
+SYSLOGNG_FLAG=`ps -ef |egrep "syslog-ng"|egrep -v "grep syslog-ng"|wc -l`; 
+RSYSLOGD_FLAG=`ps -ef | egrep "rsyslogd" | egrep -v "grep" |wc -l`; 
+if [ "$SYSLOGD_FLAG" != 0 ]; 
+  then 
+   LOGDIR=`if [ -f /etc/syslog.conf ];then cat /etc/syslog.conf| egrep -v "^[[:space:]]*[#$]"|awk '{print $2}'|sed 's/^-//g'|egrep '^\s*\/';fi`; 
+   MESSAGE_NUM=`ls -l $LOGDIR 2>/dev/null|egrep -v "[r-][w-][x-][r-]-[x-][r-]-[x-]" | awk '{print $1" "$7"  "$8" "$9}'|wc -l`;
+   echo MESSAGE_NUM=$MESSAGE_NUM
+   OTHER_NUM=`ls -l $LOGDIR 2>/dev/null|egrep -v "[r-][w-][x-][r-][w-][x-][r-]-[x-]" | awk '{print $1" "$7"  "$8" "$9}'|wc -l`;
+   echo OTHER_NUM=$OTHER_NUM
+   echo ALL_NUM=`expr $MESSAGE_NUM + $OTHER_NUM`
+else 
+   if [ "$RSYSLOGD_FLAG" != 0 ]; 
+         then 
+         LOGDIR=`cat /etc/rsyslog.conf | egrep -v "^[[:space:]]*[#$]"|awk '{print $2}'|sed 's/^-//g'|egrep '^\s*\/'`; 
+         MESSAGE_NUM=`ls -l $LOGDIR 2>/dev/null|egrep -v "[r-][w-][x-][r-]-[x-][r-]-[x-]" | awk '{print $1" "$7"  "$8" "$9}'|wc -l`;
+   echo MESSAGE_NUM=$MESSAGE_NUM
+      OTHER_NUM=`ls -l $LOGDIR 2>/dev/null|egrep -v "[r-][w-][x-][r-][w-][x-][r-]-[x-]" | awk '{print $1" "$7"  "$8" "$9}'|wc -l`;
+         echo OTHER_NUM=$OTHER_NUM
+         echo ALL_NUM=`expr $MESSAGE_NUM + $OTHER_NUM`
+   else 
+         if [ "$SYSLOGNG_FLAG" != 0 ]; 
+            then 
+            LOGDIR=`cat /etc/syslog-ng/syslog-ng.conf|egrep -v "^[[:space:]]*[#$]"|egrep "^destination"|egrep file|cut -d\" -f2`; 
+            MESSAGE_NUM=`ls -l $LOGDIR 2>/dev/null|egrep -v "[r-][w-][x-][r-]-[x-][r-]-[x-]" | awk '{print $1" "$7"  "$8" "$9}'|wc -l`;
+      echo MESSAGE_NUM=$MESSAGE_NUM
+         OTHER_NUM=`ls -l $LOGDIR 2>/dev/null|egrep -v "[r-][w-][x-][r-][w-][x-][r-]-[x-]" | awk '{print $1" "$7"  "$8" "$9}'|wc -l`;
+            echo OTHER_NUM=$OTHER_NUM
+            echo ALL_NUM=`expr $MESSAGE_NUM + $OTHER_NUM` 
+         else 
+            echo "SYSLOG:OFF"; 
+         fi; 
+   fi; 
+fi; 
+unset SYSLOGD_FLAG SYSLOGNG_FLAG RSYSLOGD_FLAG LOGDIR;
+
+#!/bin/bash
+if [ -f /etc/syslog.conf ] 
+  then 
+   echo "SYSLOG="`cat /etc/syslog.conf | egrep -v "^[[:space:]]*#" | egrep "cron.\*"` 
+  fi 
+if [ -f /etc/rsyslog.conf ] 
+  then 
+   echo "RSYSLOG="`cat /etc/rsyslog.conf | egrep -v "^[[:space:]]*#" | egrep "cron.\*"` 
+  fi 
+if [ -s /etc/syslog-ng/syslog-ng.conf ]; 
+  then 
+   cron_1=`cat /etc/syslog-ng/syslog-ng.conf | egrep -v "^[[:space:]]*#" | egrep "filter[[:space:]]*.*[[:space:]]*{[[:space:]]*facility\(cron\);[[:space:]]*};" | wc -l`; 
+   if [ $cron_1 -ge 1 ]; 
+  then 
+  cron_2=`cat /etc/syslog-ng/syslog-ng.conf | egrep -v "^[[:space:]]*#" | egrep "destination[[:space:]]*.*[[:space:]]*{[[:space:]]*file\(\"/var/log/cron\"\)[[:space:]]*;[[:space:]]*};"|awk '{print $2}'`; 
+  if [ -n $cron_2 ]; 
+  then 
+  cron_3=`cat /etc/syslog-ng/syslog-ng.conf | egrep -v "^[[:space:]]*#" | egrep "log[[:space:]]*{[[:space:]]*source\(src\);[[:space:]]*filter\(.*\);[[:space:]]*destination\($cron_2\);[[:space:]]*};" | wc -l`; 
+   if [ $cron_3 -ge 1 ] 
+  then 
+  echo "corn config,result:true"; 
+  else 
+  echo "No log,result:false"; 
+  fi; 
+  fi; 
+  fi; 
+  fi;
+
+#!/bin/bash
+if [ -f /etc/syslog.conf ]; 
+  then 
+   syslog=`cat /etc/syslog.conf | egrep -v "^[[:space:]]*#" | egrep "*.err\;kern\.debug\;daemon\.notice[[:space:]]*/var/adm/messages"|wc -l`; 
+   if [ $syslog -ge 1 ]; 
+   then 
+  echo "SYSLOG:true"; 
+  else 
+  echo "SYSLOG:false"; 
+  fi; 
+  fi; 
+if [ -f /etc/rsyslog.conf ]; 
+  then 
+   rsyslog=`cat /etc/rsyslog.conf | egrep -v "^[[:space:]]*#" | egrep "*.err\;kern\.debug\;daemon\.notice[[:space:]]*/var/adm/messages"|wc -l`; 
+  if [ $rsyslog -ge 1 ]; 
+   then 
+  echo "RSYSLOG:true"; 
+  else 
+  echo "RSYSLOG:false"; 
+  fi; 
+  fi; 
+if [ -s /etc/syslog-ng/syslog-ng.conf ]; 
+  then suse_ret=`cat /etc/syslog-ng/syslog-ng.conf | egrep -v "^[[:space:]]*#" | egrep "level(err) or facility(kern) and level(debug) or facility(daemon) and level(notice)"`; 
+   if [ -n "$suse_ret" ]; 
+   then suse_ret2=`cat /etc/syslog-ng/syslog-ng.conf | egrep -v "^[[:space:]]*#" | egrep 'file("/var/adm/msgs")'`; 
+  if [ -n "$suse_ret2" ]; 
+  then suse_ret3=`cat /etc/syslog-ng/syslog-ng.conf | egrep -v "^[[:space:]]*#" | egrep "destination(msgs)"`; 
+  fi; 
+  fi; 
+  fi; 
+if [ -n "$suse_ret3" ]; 
+  then echo "SUSE:true"; 
+  else echo "SUSE:true"; 
+  fi; 
+
+#!/bin/bash
+if [ -f /etc/syslog.conf ]; 
+  then 
+   cat /etc/syslog.conf | egrep -v "^[[:space:]]*#" | egrep -E '[[:space:]]*.+@.+'; 
+  fi; 
+if [ -s /etc/syslog-ng/syslog-ng.conf ]; 
+  then 
+   ret_1=`cat /etc/syslog-ng/syslog-ng.conf | egrep -v "^[[:space:]]*#" | egrep "port(514)"|awk '{print $2}'`; 
+   if [ -n "$ret_1" ]; 
+   then 
+  ret_2=`cat /etc/syslog-ng/syslog-ng.conf | egrep -v "^[[:space:]]*#" | egrep "destination($ret_1)"`; 
+   if [ -n "$ret_2" ]; 
+   then 
+  echo "LogServer:true"; 
+   else 
+  echo "LogServer:false"; 
+  fi; 
+  fi; 
+  fi; 
+if [ -f /etc/rsyslog.conf ]; 
+  then cat /etc/rsyslog.conf | egrep -v "^[[:space:]]*#" | egrep -E '[[:space:]]*.+@.+'; 
+fi
+
+/sbin/chkconfig --list |egrep "telnet|ssh" 
+ps -ef|egrep "sshd"|egrep -v "grep" 
+echo "telnetnum="`/sbin/chkconfig --list |egrep "*.telnet:"|egrep -i "on|启用"|wc -l` 
+echo "sshnum="`ps -ef|egrep "sshd"|egrep -v "grep"|wc -l` 
+unset telnetnum sshnum
+
+#!/bin/bash
+uname -a 
+if [ -f /etc/SuSE-release ]; 
+  then 
+   cat /etc/SuSE-release; 
+   uname -a; 
+  else 
+   if [ -f /etc/redhat-release ]; 
+   then 
+  cat /etc/redhat-release; 
+   uname -a; 
+  fi; 
+  fi; 
+
+egrep "^lp:|^sync:|^halt:|^news:|^uucp:|^operator:|^games:|^gopher:|^smmsp:|^nfsnobody:|^nobody:|^adm:|^shutdown:" /etc/shadow|awk -F: '($2!~/\*(.*)/) {print $1":"$2}' 
+egrep "^lp:|^sync:|^halt:|^news:|^uucp:|^operator:|^games:|^gopher:|^smmsp:|^nfsnobody:|^nobody:|^adm:|^shutdown:" /etc/passwd|awk -F: '($7!~/bin\/false/) {print $1":"$7}' 
+echo "num_of_LK="`egrep "^lp:|^sync:|^halt:|^news:|^uucp:|^operator:|^games:|^gopher:|^smmsp:|^nfsnobody:|^nobody:|^adm:|^shutdown:" /etc/shadow|awk -F: '($2!~/\*(.*)/) {print $1":"$2}'|wc -l` 
+echo "num_of_shell="`egrep "^lp:|^sync:|^halt:|^news:|^uucp:|^operator:|^games:|^gopher:|^smmsp:|^nfsnobody:|^nobody:|^adm:|^shutdown:" /etc/passwd|awk -F: '($7!~/bin\/false/) {print $1":"$7}'|wc -l`
+
+/sbin/chkconfig --list
+netstat -an
+
+#!/bin/bash
+ssh_status=`ps -ef|egrep "sshd"|egrep -v "grep"|wc -l`; 
+if [ -s /etc/issue ] 
+ then cat /etc/issue 
+  redhat_count=`cat /etc/issue | egrep -i "Red Hat" | wc -l` 
+  suse_count=`cat /etc/issue | egrep -i "suse" | wc -l`
+  centos_count=`cat /etc/issue | egrep -i "CentOS" | wc -l`
+  else 
+  redhat_count=0
+  suse_count=0
+  centos_count=0
+ fi 
+if ([ $redhat_count -ge 1 ] || [ $suse_count -ge 1 ] || [ $centos_count -ge 1 ]) 
+ then beforeresult=1; 
+ echo "issue contain messgae.check result:false"
+ else 
+ beforeresult=0;
+ echo "issue contain no messgae.check result:true"
+ fi;
+if [ -s /etc/issue.net ] 
+ then cat /etc/issue.net 
+  redhat_count=`cat /etc/issue.net | egrep -i "Red Hat" | wc -l` 
+  suse_count=`cat /etc/issue.net | egrep -i "suse" | wc -l`
+  centos_count=`cat /etc/issue | egrep -i "CentOS" | wc -l`
+  else
+  redhat_count=0
+  suse_count=0
+  centos_count=0
+ fi 
+if ([ $redhat_count -ge 1 ] || [ $suse_count -ge 1 ] || [ $centos_count -ge 1 ]) 
+ then telnetresult=1 
+ else telnetresult=0
+ fi
+if [ $ssh_status -ne 0 ]
+then 
+if [ -f /etc/ssh/sshd_config ] 
+ then 
+ ssh_bannerfile=`cat /etc/ssh/sshd_config |sed '/^\s*#/d'| egrep "Banner" | awk '{print $2}'`
+if ( [ -s /etc/motd ] && [ -f $ssh_bannerfile ]); 
+ then 
+  echo "sshd:on,banner not null,result:true"; 
+ else
+  echo "sshd:on,banner null,result:false"; 
+  fi;
+  else 
+  echo "sshd:on,banner null,result:false"; 
+ fi;
+else 
+ echo "sshd:off,result:true"; 
+ fi; 
+telnet_status=`netstat -an|egrep ":23\>"|egrep -i listen|wc -l`;
+if ([ $telnetresult -eq 1 ] && [ $telnet_status -eq 1 ]); 
+ then 
+  echo "telnet:on.banner not valid.result:false"; 
+  else 
+  if [ $telnetresult -eq 1 ]; 
+ then 
+ echo "telnet:off.banner not valid.result:true"; 
+ else 
+  if [ $telnet_status -eq 1 ]; 
+ then 
+ echo "telnet:on.banner valid.result:true"; 
+ else 
+ echo "telnet:off.banner valid.result:true"; 
+ fi; 
+ fi; 
+ fi;
+
+cat /etc/profile |egrep -v "^[[:space:]]*#"|egrep -v "^$"|egrep -i "TMOUT="|tail -1
+
+find / -maxdepth 3 -name .netrc 2>/dev/null 
+find / -maxdepth 3 -name .rhosts 2>/dev/null 
+find / -maxdepth 3 -name hosts.equiv 2>/dev/null 
+echo "netrc_num="`find / -maxdepth 3 -name .netrc 2>/dev/null|wc -l` 
+echo "rhosts_num="`find / -maxdepth 3 -name .rhosts 2>/dev/null|wc -l` 
+echo "hosts.equiv_num="`find / -maxdepth 3 -name hosts.equiv 2>/dev/null|wc -l` 
+
+#!/bin/bash 
+FTP_STATUS=`ps -ef|egrep ftpd|egrep -v "grep "|wc -l`; 
+ftp_check_func2 () 
+  { 
+  if [ -f /etc/vsftpd.conf ]; 
+   then 
+  FTP_CONF="/etc/vsftpd.conf"; 
+   FTP_USER=`cat $FTP_CONF|egrep -v "^#"|egrep userlist_file|cut -d= -f2`; 
+   vsftpconf_check; 
+   else 
+   if [ -f /etc/vsftpd/vsftpd.conf ]; 
+   then 
+  FTP_CONF="/etc/vsftpd/vsftpd.conf"; 
+   FTP_USER=`cat $FTP_CONF|egrep -v "^#"|egrep userlist_file|cut -d= -f2`; 
+   vsftpconf_check; 
+  fi; 
+  fi; 
+  } 
+vsftpconf_check () 
+  { 
+  userlist_enable=`egrep -v "^#" $FTP_CONF|egrep -i "userlist_enable=YES"|wc -l`; 
+  userlist_deny=`egrep -v "^#" $FTP_CONF|egrep -i "userlist_deny=NO"|wc -l`; 
+  if  [ $userlist_enable = 1 -a $userlist_deny = 1 ]; 
+  then 
+   if [ -n "$FTP_USER" ] 
+   then 
+  if [ `egrep -v "^#" $FTP_USER|egrep "^root$"|wc -l` = 0 ]; 
+   then 
+  echo "FTP:on.$FTPUSERS_PAM not recommended."$FTP_USER" recommended.check result:true"; 
+   else 
+  echo "FTP:on.$FTPUSERS_PAM and "$FTP_USER" not recommended.check result:false"; 
+   fi; 
+   else 
+  echo "FTP:on.$FTPUSERS_PAM not recommended."$FTP_USER" not exist.check result:false"; 
+   fi; 
+  else 
+   echo "FTP:on.$FTPUSERS_PAM, userlist_enable and userlist_deny not recommended.check result:false"; 
+  fi; 
+  } 
+ftp_check_func1 () 
+  { 
+  if [ -f  /etc/pam.d/vsftpd ]; 
+   then 
+   FTPUSERS_PAM=`egrep "file" /etc/pam.d/vsftpd|egrep -v "^#"|sed 's/^.*file=//g'|awk '{print $1}'` 
+  if [ -n "$FTPUSERS_PAM" ] 
+  then 
+  if [ `egrep -v "^#" $FTPUSERS_PAM|egrep "^root$"|wc -l` = 1 ]; 
+   then 
+  echo "FTP:on.$FTPUSERS_PAM recommended.check result:true"; 
+   else 
+  ftp_check_func2; 
+   fi 
+  else 
+  ftp_check_func2; 
+  fi 
+   else 
+   echo "/etc/pam.d/vsftpd not exist"; 
+  ftp_check_func2; 
+  fi;
+  } 
+if [ $FTP_STATUS -eq 0 ]; 
+  then  echo "FTP:off.check result:true"; 
+   else  ftp_check_func1; 
+  fi 
+unset FTP_STATUS FTP_CONF FTP_USER FTPUSERS_PAM
+
+#!/bin/bash
+if [ `ps -ef|egrep ftpd|egrep -v "grep"|wc -l` -ge 1 ]; 
+  then 
+   if [ -f /etc/vsftpd.conf ]; 
+   then 
+   cat /etc/vsftpd.conf|egrep -v "^[[:space:]]*#"|egrep -v "^[[:space:]]*$"|egrep -i "anonymous_enable"; 
+   else 
+  if [ -f /etc/vsftpd/vsftpd.conf ]; 
+   then 
+   cat /etc/vsftpd/vsftpd.conf|egrep -v "^[[:space:]]*#"|egrep -v "^[[:space:]]*$"|egrep -i "anonymous_enable"; 
+   fi;
+   fi; 
+   else 
+   echo "ftp:off,result:true"; 
+  fi; 
+
+#!/bin/bash 
+FTP_STATUS=`ps -ef|egrep ftpd|egrep -v grep|wc -l` 
+ftp_check_func () 
+  { 
+  if [ -f /etc/vsftpd.conf ]; 
+  then 
+  FTPCONF="/etc/vsftpd.conf"; 
+  else 
+   if [ -f /etc/vsftpd/vsftpd.conf ]; 
+   then 
+  FTPCONF="/etc/vsftpd/vsftpd.conf"; 
+   fi; 
+  fi; 
+  if [ -f "$FTPCONF" ] 
+  then 
+   if [ `egrep -v "^[[:space:]]*#" $FTPCONF|egrep -i "banner_file"|wc -l` -ne 0 ]; 
+   then 
+   banner_file = `egrep -v "^[[:space:]]*#" $FTPCONF|egrep -i "banner_file"|awk -F"=( )*" '{print $2}'`
+   if [ -f $banner_file ] 
+    then 
+    echo "FTP:ON.$FTPCONF banner_file recommended.check result:true";
+   else 
+    echo "FTP:ON.$FTPCONF banner_file recommended,$banner_file not exist.check result:false";
+   fi;
+   else if [ `egrep -v "^[[:space:]]*#" $FTPCONF|egrep -i "ftpd_banner"|wc -l` -ne 0 ];
+   then
+    echo "FTP:on.$FTPCONF banner recommended.check result:true"; 
+   else 
+    echo "FTP:on.$FTPCONF banner not recommended.check result:false"; 
+   fi; 
+  fi; 
+  fi;
+  unset FTPCONF; 
+  } 
+if [ $FTP_STATUS -eq 0 ]; 
+  then 
+   echo "FTP:off.check result:true" 
+  else 
+   ftp_check_func; 
+  fi;
+
+#!/bin/bash
+snmp_status=`ps -ef|egrep snmpd|egrep -v "grep"|wc -l`; 
+snmp_check_fun() 
+  { 
+  if [ -f /etc/snmp/snmpd.conf ]; 
+  then snmp_config=/etc/snmp/snmpd.conf; 
+  else snmp_config=/etc/snmpd.conf; 
+  fi; 
+  egrep -v "^#" $snmp_config|egrep "community"; 
+  if [ `egrep -v "^#" $snmp_config|egrep "rocommunity|rwcommunity"|egrep "public|private"|wc -l` -eq 0 ]; 
+  then echo "SNMPD:ON.SNMP result:true"; 
+  else echo "SNMPD:ON.SNMP result:false"; 
+  fi; 
+  } 
+if [ "$snmp_status" -ge  1 ]; 
+  then snmp_check_fun; 
+  else echo "SNMPD:OFF.SNMP result:true"; 
+  fi 
+unset snmp_status snmp_config;
+
+#!/bin/bash
+ssh_banners=`cat /etc/ssh/sshd_config | egrep -v '^[[:space:]]*#' | egrep -i Banner|awk '{print $2}'`; 
+ssh_status=`netstat -antp|egrep -i listen|egrep sshd|wc -l`; 
+if ([ "$ssh_status" != 0 ] && [ -f "$ssh_banners" ]); 
+ then 
+  echo "sshd:ON.has banner.check result:true"; 
+ else 
+  if [ "$ssh_status" != 0 ]; 
+  then 
+ echo "sshd:ON.no banner.check result:false"; 
+ else 
+ echo "sshd:OFF.check result:true"; 
+ fi; 
+ fi; 
+
+echo `cat /proc/sys/net/ipv4/conf/*/accept_source_route`" end"
+
+gid_min=`(egrep -v ^# /etc/login.defs |egrep "^GID_MIN"|awk '($1="GID_MIN") {print $2}')` 
+gid_max=`(egrep -v ^# /etc/login.defs |egrep "^GID_MAX"|awk '($1="GID_MAX") {print $2}')` 
+egrep -v "oracle|sybase|postgres|informix" /etc/passwd|awk -F: '($4>='$gid_min' && $4<='$gid_max') {print $1":"$3":"$4}' 
+echo $gid_min $gid_max 
+echo "result="`egrep -v "oracle|sybase|postgres|informix" /etc/passwd|awk -F: '($4>='$gid_min' && $4<='$gid_max') {print $1":"$3":"$4}'|wc -l` 
+unset gid_min gid_max
+
+cat /etc/hosts.allow |sed '/^#/d'|sed '/^$/d'|egrep -i "all|sshd|telnet" 
+cat /etc/hosts.deny |sed '/^#/d'|sed '/^$/d'|egrep -i ":all"|egrep -i "all|sshd|telnet"
+echo "allowno="`egrep -i "sshd|telnet|all" /etc/hosts.allow |sed '/^#/d'|sed '/^$/d'|wc -l` 
+echo "denyno="`egrep -i "sshd|telnet|all" /etc/hosts.deny |egrep -i ":all" |sed '/^#/d'|sed '/^$/d'|wc -l`
+
+echo "ip_forward="`/sbin/sysctl -n net.ipv4.ip_forward` 
+
+echo "accept_redirects="`/sbin/sysctl -n net.ipv4.conf.all.accept_redirects` 
+
+#!/bin/bash 
+ntpstatus=`ps -ef|egrep "ntp|ntpd"|egrep -v grep|wc -l` 
+if [ $ntpstatus != 0 ]; 
+  then 
+  echo "ntp:start" 
+  cat /etc/ntp.conf|grep "^server"|egrep -v "127.127.1.0"|egrep -v "127.0.0.1"; 
+  echo "ntpservernum="`cat /etc/ntp.conf|egrep "^server"|egrep -v "127.127.1.0"|egrep -v "127.0.0.1"|wc -l`; 
+   else 
+  echo "ntp:stop"
+  fi 
+unset ntpstatus ntpservernum;
+
+cat /etc/pam.d/su|egrep -v "^[[:space:]]*#"|egrep -v "^$"|egrep "^auth" 
+
+#!/bin/bash
+Calculate () 
+  { 
+   DCREDIT=`cat $FILE_NAME|egrep -v "^#|^$"|egrep -iw "dcredit"|sed 's/^.*dcredit[[:space:]]*=[[:space:]]*//g'|sed 's/\s.*$//g'`; 
+   LCREDIT=`cat $FILE_NAME|egrep -v "^#|^$"|egrep -iw "lcredit"|sed 's/^.*lcredit[[:space:]]*=[[:space:]]*//g'|sed 's/\s.*$//g'`; 
+   UCREDIT=`cat $FILE_NAME|egrep -v "^#|^$"|egrep -iw "ucredit"|sed 's/^.*ucredit[[:space:]]*=[[:space:]]*//g'|sed 's/\s.*$//g'`; 
+   OCREDIT=`cat $FILE_NAME|egrep -v "^#|^$"|egrep -iw "ocredit"|sed 's/^.*ocredit[[:space:]]*=[[:space:]]*//g'|sed 's/\s.*$//g'`; 
+   MINLEN=`cat $FILE_NAME|egrep -v "^#|^$"|egrep -iw  "minlen"|sed 's/^.*minlen[[:space:]]*=[[:space:]]*//g'|sed 's/\s.*$//g'`;
+   echo "DCREDIT=$DCREDIT"; 
+   echo "LCREDIT=$LCREDIT"; 
+   echo "UCREDIT=$UCREDIT"; 
+   echo "OCREDIT=$OCREDIT"; 
+   echo "MINLEN=$MINLEN"; 
+   if [ -z $DCREDIT ]; then DCREDIT=0; else if [ $DCREDIT -lt 0 ]; then DCREDIT=1; fi; fi;
+   if [ -z $LCREDIT ]; then LCREDIT=0; else if [ $LCREDIT -lt 0 ]; then LCREDIT=1; fi; fi;
+   if [ -z $UCREDIT ]; then UCREDIT=0; else if [ $UCREDIT -lt 0 ]; then UCREDIT=1; fi; fi;
+   if [ -z $OCREDIT ]; then OCREDIT=0; else if [ $OCREDIT -lt 0 ]; then OCREDIT=1; fi; fi;
+   
+   MINCLASS=`expr $DCREDIT + $LCREDIT + $UCREDIT + $OCREDIT`;
+   echo "MINCLASS=$MINCLASS"
+   unset DCREDIT LCREDIT UCREDIT OCREDIT MINLEN MINCLASS; 
+  } 
+if ([ -d /etc/pam.d ] && [ -f /etc/pam.d/common-password ] );
+  then
+    FILE_NAME=/etc/pam.d/common-password;
+    Calculate;
+  fi
+
+if ([ -f /etc/redhat-release ] && [ -f /etc/pam.d/system-auth ]); 
+  then 
+   FILE_NAME=/etc/pam.d/system-auth; 
+   Calculate; 
+  fi 
+
+suse_version=`cat /etc/SuSE-release 2>/dev/null|grep -i "VERSION"|awk '{print $3}'` 
+if ([ "x$suse_version" = x10 ] || [ "x$suse_version" = x11 ]) 
+  then 
+   FILE_NAME=/etc/pam.d/common-password 
+   Calculate; 
+   else 
+  if [ -f /etc/SuSE-release ] 
+  then 
+   FILE_NAME=/etc/pam.d/passwd 
+   Calculate; 
+  fi 
+  fi
+
+cat /etc/login.defs |egrep -v "^[[:space:]]*#"|egrep -E '^\s*PASS_MAX_DAYS|^\s*PASS_MIN_DAYS|^\s*PASS_WARN_AGE'
+cat /etc/login.defs |grep -v "^[[:space:]]*#"|grep -E '^\s*PASS_MAX_DAYS|^\s*PASS_MIN_DAYS|^\s*PASS_WARN_AGE'
+
+#!/bin/bash
+if ([ -d /etc/pam.d ] && [ -f /etc/pam.d/common-password ] );
+  then FILE_NAME=/etc/pam.d/common-password;
+    cat $FILE_NAME |sed '/^#/d'|sed '/^$/d'|egrep -i "auth[[:space:]]*required[[:space:]]*pam_tally.so|auth[[:space:]]*required[[:space:]]*pam_tally2.so|account[[:space:]]*required[[:space:]]*pam_tally.so|account[[:space:]]*required[[:space:]]*pam_tally2.so" 
+  fi
+if ([ -f /etc/redhat-release ] && [ -f /etc/pam.d/system-auth ]); 
+  then FILE_NAME=/etc/pam.d/system-auth 
+   cat $FILE_NAME |sed '/^#/d'|sed '/^$/d'|egrep -i "auth[[:space:]]*required[[:space:]]*pam_tally.so|auth[[:space:]]*required[[:space:]]*pam_tally2.so|account[[:space:]]*required[[:space:]]*pam_tally.so|account[[:space:]]*required[[:space:]]*pam_tally2.so" 
+  fi 
+suse_version=`cat /etc/SuSE-release 2>/dev/null|grep -i "VERSION"|awk '{print $3}'` 
+if ([ "x$suse_version" = x10 ] || [ "x$suse_version" = x11 ]) 
+  then 
+   FILE_NAME=/etc/pam.d/common-password 
+   cat $FILE_NAME|grep -v '^#'|egrep -i "auth[[:space:]]*required[[:space:]]*pam_tally.so|auth[[:space:]]*required[[:space:]]*pam_tally2.so|account[[:space:]]*required[[:space:]]*pam_tally.so|account[[:space:]]*required[[:space:]]*pam_tally2.so" 
+   else 
+  if [ -f /etc/SuSE-release ] 
+  then 
+  FILE_NAME=/etc/pam.d/passwd 
+  cat $FILE_NAME|grep -v '^#'|egrep -i "auth[[:space:]]*required[[:space:]]*pam_tally.so|auth[[:space:]]*required[[:space:]]*pam_tally2.so|account[[:space:]]*required[[:space:]]*pam_tally.so|account[[:space:]]*required[[:space:]]*pam_tally2.so" 
+  fi 
+  fi 
+unset suse_version FILE_NAME;
+
+#!/bin/bash
+if ([ -d /etc/pam.d ] && [ -f /etc/pam.d/common-password ] );
+  then FILE_NAME=/etc/pam.d/common-password;
+    cat $FILE_NAME |sed '/^#/d'|sed '/^$/d'|egrep password 
+  fi
+  
+if ([ -f /etc/redhat-release ] && [ -f /etc/pam.d/system-auth ]); 
+  then FILE_NAME=/etc/pam.d/system-auth 
+   cat $FILE_NAME |sed '/^#/d'|sed '/^$/d'|egrep password 
+fi 
+
+suse_version=`cat /etc/SuSE-release 2>/dev/null|egrep -i "VERSION"|awk '{print $3}'` 
+if ([ "x$suse_version" = x10 ] || [ "x$suse_version" = x11 ]) 
+  then 
+   FILE_NAME=/etc/pam.d/common-password 
+   cat $FILE_NAME|egrep -v '^#'|egrep -v '^$'|egrep password 
+   else 
+  if [ -f /etc/SuSE-release ] 
+  then 
+  FILE_NAME=/etc/pam.d/passwd 
+  cat $FILE_NAME|egrep -v '^#'|egrep -v '^$'|egrep password 
+  fi 
+fi
+unset suse_version FILE_NAME;
+
+ls -lL /etc/passwd 2>/dev/null 
+echo "passwd_count="`ls -lL /etc/passwd 2>/dev/null|grep -v "[r-][w-]-[r-]--[r-]--"|wc -l` 
+ls -lL /etc/group 2>/dev/null 
+echo "group_count="`ls -lL /etc/group 2>/dev/null|grep -v "[r-][w-]-[r-]--[r-]--"|wc -l` 
+ls -lL /etc/services 2>/dev/null 
+echo "services_count="`ls -lL /etc/services 2>/dev/null|grep -v "[r-][w-]-[r-]--[r-]--"|wc -l` 
+ls -lL /etc/shadow 2>/dev/null 
+echo "shadow_count="`ls -lL /etc/shadow 2>/dev/null|grep -v "[r-]--------"|wc -l` 
+ls -lL /etc/xinetd.conf 2>/dev/null 
+echo "xinetd_count="`ls -lL /etc/xinetd.conf 2>/dev/null|egrep -v "[r-][w-]-------"|wc -l` 
+ls -lLd /etc/security 2>/dev/null 
+echo "security_count="`ls -lLd /etc/security 2>/dev/null|egrep -v "[r-][w-]-------"|wc -l`
+
