@@ -18,6 +18,8 @@ do
     sh DB_Linux_MySQL_check.sh "$ip" /server/abchosting/mysql/bin root chinafu1502 3306
 done
 service network restart
+mkdir -p ./dat/linux/
+mkdir -p ./dat/mysql/
 mv ./OS_Linux_*.dat ./dat/linux/
 mv ./DB_Linux_MySQL*.dat ./dat/mysql/
 echo success!
