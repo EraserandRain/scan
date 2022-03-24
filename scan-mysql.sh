@@ -14,7 +14,8 @@ do
     ip=${iparr[$i]}
     echo $ip
     ip addr add "$ip" dev "$eth"
-    sh DB_Linux_MySQL_check.sh "$ip" /server/abchosting/mysql/bin sysroot chinafu1502 3306
+    # sh DB_Linux_MySQL_check.sh "$ip" /server/abchosting/mysql/bin sysroot chinafu1502 3306
+    sh DB_Linux_MySQL_check.sh "$ip" /server/abchosting/mysql/bin trunkey trunkey7771502 3306
 done
 service network restart
 mkdir -p ./dat/mysql/
