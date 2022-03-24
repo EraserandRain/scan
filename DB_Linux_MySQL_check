@@ -8,92 +8,92 @@ InstallHomePath=$1
 DatabaseUser=$2
 DatabasePwd=$3
 DatabasePort=$4
-$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -hlocalhost -P$DatabasePort -e"show variables like 'max_connections';"
+$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -h127.0.0.1 -P$DatabasePort -e"show variables like 'max_connections';"
 
 InstallHomePath=$1
 DatabaseUser=$2
 DatabasePwd=$3
 DatabasePort=$4
-$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -hlocalhost -P$DatabasePort -e"show variables like 'ssl_key';"
+$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -h127.0.0.1 -P$DatabasePort -e"show variables like 'ssl_key';"
 
 InstallHomePath=$1
 DatabaseUser=$2
 DatabasePwd=$3
 DatabasePort=$4
-$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -hlocalhost -P$DatabasePort -e"show variables like 'ssl_ca';"
+$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -h127.0.0.1 -P$DatabasePort -e"show variables like 'ssl_ca';"
 
 InstallHomePath=$1
 DatabaseUser=$2
 DatabasePwd=$3
 DatabasePort=$4
-$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -hlocalhost -P$DatabasePort -e"show variables like 'ssl_cert';"
+$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -h127.0.0.1 -P$DatabasePort -e"show variables like 'ssl_cert';"
 
 InstallHomePath=$1
 DatabaseUser=$2
 DatabasePwd=$3
 DatabasePort=$4
-$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -hlocalhost -P$DatabasePort -e"SHOW DATABASES like 'test';"
+$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -h127.0.0.1 -P$DatabasePort -e"SHOW DATABASES like 'test';"
 
 InstallHomePath=$1
 DatabaseUser=$2
 DatabasePwd=$3
 DatabasePort=$4
-$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -hlocalhost -P$DatabasePort -e"select @@global.sql_mode;"
+$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -h127.0.0.1 -P$DatabasePort -e"select @@global.sql_mode;"
 
 InstallHomePath=$1
 DatabaseUser=$2
 DatabasePwd=$3
 DatabasePort=$4
-$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -hlocalhost -P$DatabasePort -e"show variables like 'have_openssl';"
+$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -h127.0.0.1 -P$DatabasePort -e"show variables like 'have_openssl';"
 
 InstallHomePath=$1
 DatabaseUser=$2
 DatabasePwd=$3
 DatabasePort=$4
-$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -hlocalhost -P$DatabasePort -e"select count(*) from mysql.user where host ='%';"
+$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -h127.0.0.1 -P$DatabasePort -e"select count(*) from mysql.user where host ='%';"
 
 InstallHomePath=$1
 DatabaseUser=$2
 DatabasePwd=$3
 DatabasePort=$4
-$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -hlocalhost -P$DatabasePort -e"show variables like 'local_infile';"
+$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -h127.0.0.1 -P$DatabasePort -e"show variables like 'local_infile';"
 
 InstallHomePath=$1
 DatabaseUser=$2
 DatabasePwd=$3
 DatabasePort=$4
-$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -hlocalhost -P$DatabasePort -e"select count(*) from mysql.user where length(password) < 41 and password!='';"
+$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -h127.0.0.1 -P$DatabasePort -e"select count(*) from mysql.user where length(password) < 41 and password!='';"
 
 InstallHomePath=$1
 DatabaseUser=$2
 DatabasePwd=$3
 DatabasePort=$4
-$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -hlocalhost -P$DatabasePort -e"select count(*) from mysql.user where user !='root' and User !='' and Password !='';"
+$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -h127.0.0.1 -P$DatabasePort -e"select count(*) from mysql.user where user !='root' and User !='' and Password !='';"
 
 InstallHomePath=$1
 DatabaseUser=$2
 DatabasePwd=$3
 DatabasePort=$4
-$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -hlocalhost -P$DatabasePort -e"select count(*) from mysql.user where user = 'root';"
+$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -h127.0.0.1 -P$DatabasePort -e"select count(*) from mysql.user where user = 'root';"
 
 InstallHomePath=$1
 DatabaseUser=$2
 DatabasePwd=$3
 DatabasePort=$4
-$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -hlocalhost -P$DatabasePort -e"show variables like 'secure_auth';"
+$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -h127.0.0.1 -P$DatabasePort -e"show variables like 'secure_auth';"
 
 InstallHomePath=$1
 DatabaseUser=$2
 DatabasePwd=$3
 DatabasePort=$4
-$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -hlocalhost -P$DatabasePort -e"select count(*) from mysql.user where user = '';"
+$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -h127.0.0.1 -P$DatabasePort -e"select count(*) from mysql.user where user = '';"
 
 InstallHomePath=$1
 DatabaseUser=$2
 DatabasePwd=$3
 DatabasePort=$4
-$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -hlocalhost -P$DatabasePort -e"select * from mysql.user where length(password) = 0 or password is null;"
-$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -hlocalhost -P$DatabasePort -e"select count(*) from mysql.user where length(password) = 0 or password is null;"
+$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -h127.0.0.1 -P$DatabasePort -e"select * from mysql.user where length(password) = 0 or password is null;"
+$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -h127.0.0.1 -P$DatabasePort -e"select count(*) from mysql.user where length(password) = 0 or password is null;"
 
 InstallHomePath=$1
 DatabaseUser=$2
@@ -102,31 +102,31 @@ DatabasePort=$4
 echo "select Host,User,Select_priv,Insert_priv,Update_priv,Delete_priv,Create_priv,Drop_priv from mysql.user">unicommysql.sql;
 echo " where (Select_priv = 'Y') or (Select_priv = 'Y') or (Update_priv = 'Y') or (Delete_priv = 'Y') or ">>unicommysql.sql;
 echo "(Create_priv = 'Y') or (Drop_priv = 'Y');">>unicommysql.sql
-$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -hlocalhost -P$DatabasePort < unicommysql.sql 
+$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -h127.0.0.1 -P$DatabasePort < unicommysql.sql 
 
 InstallHomePath=$1
 DatabaseUser=$2
 DatabasePwd=$3
 DatabasePort=$4
-$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -hlocalhost -P$DatabasePort -e"show variables like 'log_error';"
-$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -hlocalhost -P$DatabasePort -e"show variables like 'log_bin';"
-$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -hlocalhost -P$DatabasePort -e"show variables like 'log';"
+$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -h127.0.0.1 -P$DatabasePort -e"show variables like 'log_error';"
+$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -h127.0.0.1 -P$DatabasePort -e"show variables like 'log_bin';"
+$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -h127.0.0.1 -P$DatabasePort -e"show variables like 'log';"
 
 InstallHomePath=$1
 DatabaseUser=$2
 DatabasePwd=$3
 DatabasePort=$4
-$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -hlocalhost -P$DatabasePort -e"show variables like 'version';"
+$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -h127.0.0.1 -P$DatabasePort -e"show variables like 'version';"
 
 InstallHomePath=$1
 DatabaseUser=$2
 DatabasePwd=$3
 DatabasePort=$4
-$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -hlocalhost -P$DatabasePort -e"show variables like 'skip_networking';"
+$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -h127.0.0.1 -P$DatabasePort -e"show variables like 'skip_networking';"
 
 InstallHomePath=$1
 DatabaseUser=$2
 DatabasePwd=$3
 DatabasePort=$4
-$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -hlocalhost -P$DatabasePort -e"select count(Host) from mysql.user where Host not in ('localhost','localhost.localdomain','127.0.0.1') and Password !=''; "
+$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -h127.0.0.1 -P$DatabasePort -e"select count(Host) from mysql.user where Host not in ('localhost','localhost.localdomain','127.0.0.1') and Password !=''; "
 

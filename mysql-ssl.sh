@@ -10,5 +10,5 @@ openssl req -newkey rsa:2048 -days 99999 -nodes -keyout /server/abchosting/datab
 openssl rsa -in /server/abchosting/database/client-key.pem -out /server/abchosting/database/client-key.pem
 openssl x509 -req -in /server/abchosting/database/client-req.pem -days 99999 -CA /server/abchosting/database/ca.pem -CAkey /server/abchosting/database/ca-key.pem -set_serial 01 -out /server/abchosting/database/client-cert.pem
 chown -v mysql.mysql /server/abchosting/database/{ca,server*}.pem
-ll /server/abchosting/database/*.pem
+ls -l /server/abchosting/database/*.pem
 exit 0
