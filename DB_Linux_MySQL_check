@@ -128,5 +128,5 @@ InstallHomePath=$1
 DatabaseUser=$2
 DatabasePwd=$3
 DatabasePort=$4
-$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -hlocalhost --skip-ssl -P$DatabasePort -e"select count(Host) from mysql.user where Host not in ('localhost','localhost.localdomain','localhost --skip-ssl') and Password !=''; "
+$InstallHomePath/mysql -u"$DatabaseUser" -p"$DatabasePwd" -hlocalhost --skip-ssl -P$DatabasePort -e"select count(Host) from mysql.user where Host not in ('localhost','localhost.localdomain','127.0.0.1') and Password !='';"
 
